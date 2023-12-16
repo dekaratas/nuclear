@@ -147,20 +147,23 @@ export async function trackSearch(query: StreamQuery, sourceName?: string) {
 }
 
 export async function trackSearchByString(query: StreamQuery, sourceName?: string, useSponsorBlock = true): Promise<StreamData[]> {
-  const terms = query.artist && query.artist !== 'Undefined' ? (query.artist + ' ' + query.track) : (query.track);
+  try {
+    const terms = query.artist && query.artist !== 'Undefined' ? (query.artist + ' ' + query.track) : (query.track);
+    const results = await search(terms, { filterType: 'video' });
+    const heuristics = new YoutubeHeuristics();
+  
+    const orderedTracks = heuristics.orderTracks({
+      tracks: results.videos,
+      artist: query.artist,
+      title: query.track
+    });
 
-  const results = await search(terms, { filterType: 'video' });
-
-  const heuristics = new YoutubeHeuristics();
-
-  const orderedTracks = heuristics.orderTracks({
-    tracks: results.videos,
-    artist: query.artist,
-    title: query.track
-  });
-
-  return orderedTracks
-    .map((track) => videoToStreamData(track as SearchVideo, sourceName));
+    return orderedTracks
+      .map((track) => videoToStreamData(track as SearchVideo, sourceName));
+  } catch (e) {
+    logger.error(e);
+    throw new Error('Error running search query!');
+  }
 }
 
 export const getStreamForId = async (id: string, sourceName: string, useSponsorBlock = true): Promise<StreamData> => {
