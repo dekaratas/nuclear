@@ -147,7 +147,7 @@ export async function trackSearch(query: StreamQuery, sourceName?: string) {
 }
 
 export async function trackSearchByString(query: StreamQuery, sourceName?: string, useSponsorBlock = true): Promise<StreamData[]> {
-  const terms = query.artist + ' ' + query.track;
+  const terms = query.artist && query.artist !== 'Undefined' ? (query.artist + ' ' + query.track) : (query.track);
 
   const results = await search(terms, { filterType: 'video' });
 
